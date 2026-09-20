@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منصة إدارة الفصل الذكية | SmartClassroom Pro</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --indigo: #4f46e5;
+      --rose: #e11d48;
+      --rose-dark: #be123c;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .header-container { max-width: 1350px; margin: 0 auto; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 20px;
+    }
+    
+    nav { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; gap: 4px; }
+    .nav-btn {
+      border: none; background: transparent; padding: 8px 16px;
+      border-radius: 8px; font-size: 13px; font-weight: 700;
+      color: var(--text-muted); cursor: pointer; transition: 0.2s ease;
+    }
+    .nav-btn.active {
+      background: white; color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    main { max-width: 1350px; margin: 0 auto; width: 100%; padding: 20px; flex: 1; }
+
+    .filter-bar {
+      background: white; border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px 20px; margin-bottom: 20px;
+      display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-label { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+    .filter-select, .date-input {
+      border: 1px solid var(--border); padding: 7px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; color: var(--text-main); outline: none;
+      background: #f8fafc;
+    }
+
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .kpi-box {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .kpi-val { font-size: 24px; font-weight: 900; margin-top: 4px; }
+    .kpi-label { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+
+    .panel {
+      background: white; border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; margin-bottom: 20px;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: none; padding: 8px 14px; border-radius: 10px;
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s ease;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-indigo { background: var(--indigo); color: white; }
+    .btn-rose { background: var(--rose); color: white; }
+    .btn-rose:hover { background: var(--rose-dark); }
+    .btn-light { background: #f1f5f9; color: var(--text-main); }
+    .btn-light:hover { background: #e2e8f0; }
+
+    .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .att-card {
+      background: white; border: 2px solid var(--border);
+      border-radius: 16px; padding: 16px; cursor: pointer;
+      user-select: none; transition: 0.2s ease; display: flex; flex-direction: column; justify-content: space-between;
+      min-height: 115px;
+    }
+    .att-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .student-title-lg { font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.4; }
+    
+    .att-PRESENT { border-color: #a7f3d0; background: #f0fdf4; }
+    .att-ABSENT_UNEXCUSED { border-color: #fca5a5; background: #fef2f2; }
+    .att-LATE { border-color: #fde68a; background: #fffbeb; }
+    .att-PERMITTED { border-color: #bae6fd; background: #f0f9ff; }
+
+    .rewards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .reward-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: 18px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .score-badge-positive { color: #059669; }
+    .score-badge-negative { color: #e11d48; }
+
+    table { width: 100%; border-collapse: collapse; text-align: right; font-size: 13px; }
+    th { color: var(--text-muted); font-weight: 700; padding: 12px 10px; border-bottom: 2px solid var(--border); }
+    td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; }
+
+    .grade-input {
+      width: 65px; text-align: center; font-weight: 800; border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px; font-size: 13px; outline: none; transition: 0.2s;
+    }
+    .grade-input:focus { border-color: var(--primary); background: #f0fdf4; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty-state-icon { font-size: 40px; margin-bottom: 10px; }
+
+    .modal {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
+      z-index: 100; opacity: 0; pointer-events: none; transition: 0.2s ease;
+    }
+    .modal.active { opacity: 1; pointer-events: auto; }
+    .modal-box { background: white; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
+    .form-group input, .form-group select {
+      width: 100%; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 12px; outline: none;
+    }
+
+    .toast {
+      position: fixed; bottom: 20px; left: 20px; background: #0f172a; color: white;
+      padding: 10px 18px; border-radius: 10px; font-size: 12px; font-weight: 700;
+      opacity: 0; transform: translateY(20px); transition: 0.3s; z-index: 99;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">ف</div>
+        <div>
+          <h1 style="font-size: 16px; font-weight: 900;">منصة الفصل الذكية</h1>
+          <p style="font-size: 11px; color: var(--text-muted);">رصد الحضور والدرجات وإدارة السلوك والتعزيز</p>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-btn active" onclick="showTab('dashboard')" id="btn-dashboard">لوحة القيادة</button>
+        <button class="nav-btn" onclick="showTab('students')" id="btn-students">إدارة الطلاب 👥</button>
+        <button class="nav-btn" onclick="showTab('attendance')" id="btn-attendance">رصد الحضور 📅</button>
+        <button class="nav-btn" onclick="showTab('grades')" id="btn-grades">دفتر الدرجات 📊</button>
+        <button class="nav-btn" onclick="showTab('rewards')" id="btn-rewards">التعزيز والسلوك ⭐/⚠️</button>
+      </nav>
+
+      <div style="display: flex; gap: 8px;">
+        <input type="file" id="excel-input" accept=".xlsx, .xls, .csv" style="display: none;" onchange="importExcel(event)">
+        <button class="btn btn-light" onclick="document.getElementById('excel-input').click()">📥 استيراد Excel</button>
+        <button class="btn btn-light" onclick="downloadTemplate()">📄 نموذج Excel</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="filter-bar">
+      <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center;">
+        <span style="font-size: 13px; font-weight: 800;">🔍 الفلترة:</span>
+        <div class="filter-group">
+          <label class="filter-label">المرحلة:</label>
+          <select id="filter-stage" class="filter-select" onchange="onStageFilterChange()">
+            <option value="ALL">جميع المراحل</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">الصف:</label>
+          <select id="filter-grade" class="filter-select" onchange="onGradeFilterChange()">
+            <option value="ALL">جميع الصفوف</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">الشعبة:</label>
+          <select id="filter-section" class="filter-select" onchange="applyFilters()">
+            <option value="ALL">جميع الشُعب</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-group" style="background: #f1f5f9; padding: 6px 12px; border-radius: 12px;">
+        <label class="filter-label" style="color: var(--primary-dark);">📅 تاريخ يوم الرصد:</label>
+        <input type="date" id="attendance-date" class="date-input" onchange="onDateChange()">
+        <span id="day-name-display" style="font-size: 12px; font-weight: 800; color: var(--primary);"></span>
+      </div>
+    </div>
+
+    <!-- 1. لوحة القيادة -->
+    <section id="tab-dashboard">
+      <div class="kpi-row">
+        <div class="kpi-box">
+          <div><span class="kpi-label">إجمالي الطلاب</span><div class="kpi-val" id="kpi-total">0</div></div>
+          <div style="font-size: 28px;">👥</div>
+        </div>
+        <div class="kpi-box">
+          <div><span class="kpi-label">نسبة حضور اليوم المحدد</span><div class="kpi-val" style="color: var(--primary);" id="kpi-att">0%</div></div>
+          <div style="font-size: 28px;">✓</div>
+        </div>
+        <div class="kpi-box">
+          <div><span class="kpi-label">متوسط درجات الفصل</span><div class="kpi-val" style="color: var(--indigo);" id="kpi-grades">0%</div></div>
+          <div style="font-size: 28px;">📈</div>
+        </div>
+        <div class="kpi-box">
+          <div><span class="kpi-label">صافي رصيد السلوك والتعزيز</span><div class="kpi-val" style="color: #f59e0b;" id="kpi-points">0</div></div>
+          <div style="font-size: 28px;">⭐</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 style="font-size: 15px; font-weight: 800; margin-bottom: 14px;">سجل الطلاب وحالة اليوم المحدد</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>اسم الطالب</th>
+              <th>المرحلة</th>
+              <th>الصف</th>
+              <th>الشعبة</th>
+              <th style="text-align: center;">حضور اليوم المختار</th>
+              <th style="text-align: center;">المجموع الكلي (100)</th>
+              <th style="text-align: center;">التقدير</th>
+              <th style="text-align: center;">رصيد السلوك والتعزيز</th>
+            </tr>
+          </thead>
+          <tbody id="dash-tbody"></tbody>
+        </table>
+        <div id="dash-empty" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">📂</div>
+          <p>لا توجد بيانات طلاب حالياً. انتقل إلى "إدارة الطلاب" للبدء بالإدخال أو الاستيراد.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. إدارة الطلاب -->
+    <section id="tab-students" style="display: none;">
+      <div class="panel" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800;">سجل الطلاب الأساسي</h2>
+          <p style="font-size: 12px; color: var(--text-muted);">إضافة وحذف وتعديل أسماء الطلاب مع الهوية والصف والشعبة.</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary" onclick="openAddStudentModal()">+ إضافة طالب جديد</button>
+          <button class="btn btn-rose" onclick="clearAllStudents()">حذف جميع الطلاب</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <table>
+          <thead>
+            <tr>
+              <th>اسم الطالب</th>
+              <th>المرحلة</th>
+              <th>الصف</th>
+              <th>الفصل / الشعبة</th>
+              <th>رقم الهوية</th>
+              <th style="text-align: left;">إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="students-manage-tbody"></tbody>
+        </table>
+        <div id="students-empty" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">👨‍🎓</div>
+          <p>لا يوجد طلاب مسجلون.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. رصد الحضور -->
+    <section id="tab-attendance" style="display: none;">
+      <div class="panel" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800;">رصد الحضور ليوم (<span id="att-current-day-label"></span>)</h2>
+          <p style="font-size: 12px; color: var(--text-muted);">اضغط مباشرة على اسم الطالب لتبديل الحالة: حاضر ← غائب ← متأخر ← مستأذن.</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-light" onclick="setAllPresentForDate()">تحديد الكل كحاضر اليوم</button>
+          <button class="btn btn-primary" onclick="notify('✓ تم حفظ واعتماد حضور هذا اليوم')">حفظ السجل</button>
+        </div>
+      </div>
+
+      <div class="att-grid" id="att-container"></div>
+      <div id="att-empty" class="empty-state" style="display: none;">لا يوجد طلاب معروضين للرصد.</div>
+    </section>
+
+    <!-- 4. دفتر الدرجات -->
+    <section id="tab-grades" style="display: none;">
+      <div class="panel" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800;">دفتر درجات الفصل الدراسي</h2>
+          <p style="font-size: 12px; color: var(--text-muted);">الفترة الأولى (20) + الفترة الثانية (20) + الاختبار النهائي (60).</p>
+        </div>
+        <button class="btn btn-indigo" onclick="exportGrades()">تصدير كشف الدرجات إلى Excel</button>
+      </div>
+      <div class="panel">
+        <table>
+          <thead>
+            <tr>
+              <th>اسم الطالب</th>
+              <th>الصف / الشعبة</th>
+              <th style="text-align: center; background: #f0fdf4;">الفترة الأولى (20)</th>
+              <th style="text-align: center; background: #f0fdf4;">الفترة الثانية (20)</th>
+              <th style="text-align: center; background: #eef2ff;">النهائي (60)</th>
+              <th style="text-align: center; font-weight: 900; background: #f8fafc;">المجموع (100)</th>
+              <th style="text-align: center;">التقدير</th>
+            </tr>
+          </thead>
+          <tbody id="grades-tbody"></tbody>
+        </table>
+        <div id="grades-empty" class="empty-state" style="display: none;">لا يوجد طلاب معروضين.</div>
+      </div>
+    </section>
+
+    <!-- 5. التعزيز والسلوك -->
+    <section id="tab-rewards" style="display: none;">
+      <div class="panel" style="margin-bottom: 16px;">
+        <h2 style="font-size: 16px; font-weight: 800;">لوحة التعزيز الإيجابي والانضباط السلوكي</h2>
+        <p style="font-size: 12px; color: var(--text-muted);">
+          امنح نقاط التعزيز للتميز أو قم بحسم النقاط لضبط السلوك غير المرغوب فيه.
+        </p>
+      </div>
+      <div class="rewards-grid" id="rewards-container"></div>
+      <div id="rewards-empty" class="empty-state" style="display: none;">لا يوجد طلاب معروضين.</div>
+    </section>
+  </main>
+
+  <!-- نافذة إضافة طالب جديد -->
+  <div class="modal" id="addStudentModal">
+    <div class="modal-box">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px;">إضافة طالب جديد</h3>
+      <div class="form-group">
+        <label>اسم الطالب الصريح (الرباعي أو الثلاثي):</label>
+        <input type="text" id="m-add-name" placeholder="مثال: تركي محمد القحطاني">
+      </div>
+      <div class="form-group">
+        <label>رقم الهوية الوطنية / الإقامة:</label>
+        <input type="text" id="m-add-id" placeholder="مثال: 1098765432">
+      </div>
+      <div class="form-group">
+        <label>المرحلة الدراسية:</label>
+        <select id="m-add-stage" onchange="updateAddFormGrades()">
+          <option value="المتوسطة">المرحلة المتوسطة</option>
+          <option value="الابتدائية">المرحلة الابتدائية</option>
+          <option value="الثانوية">المرحلة الثانوية</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>الصف الدراسي:</label>
+        <select id="m-add-grade"></select>
+      </div>
+      <div class="form-group">
+        <label>الفصل / الشعبة:</label>
+        <input type="text" id="m-add-section" placeholder="مثال: 1 أو 2" value="1">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+        <button class="btn btn-light" onclick="closeAddStudentModal()">إلغاء</button>
+        <button class="btn btn-primary" onclick="submitAddStudent()">حفظ وإضافة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة الاحتفال بالتعزيز والحسم -->
+  <div class="modal" id="celebModal" onclick="closeCeleb()">
+    <div class="modal-box" style="text-align: center;" onclick="event.stopPropagation()">
+      <div style="font-size: 46px; margin-bottom: 10px;" id="action-icon">⭐</div>
+      <h3 style="font-size: 22px; font-weight: 900; color: #0f172a;" id="celeb-name">اسم الطالب</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0 14px;" id="celeb-reason">السبب</p>
+      
+      <div style="padding: 14px; border-radius: 14px; margin-bottom: 16px;" id="action-box">
+        <span style="font-size: 26px; font-weight: 900;" id="celeb-points">+5 نقاط</span>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="closeCeleb()">متابعة</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">رسالة النظام</div>
+
+  <script>
+    let students = JSON.parse(localStorage.getItem('smart_class_clean_storage')) || [];
+    let attendanceHistory = JSON.parse(localStorage.getItem('smart_class_clean_att')) || {};
+
+    const EDUCATION_STAGES = {
+      "الابتدائية": ["الصف الأول", "الصف الثاني", "الصف الثالث", "الصف الرابع", "الصف الخامس", "الصف السادس"],
+      "المتوسطة": ["أول متوسط", "ثاني متوسط", "ثالث متوسط"],
+      "الثانوية": ["أول ثانوي", "ثاني ثانوي", "ثالث ثانوي"]
+    };
+
+    const ARABIC_DAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+    function getTodayString() {
+      return new Date().toISOString().split('T')[0];
+    }
+    let selectedDate = getTodayString();
+
+    function saveAndSync() {
+      localStorage.setItem('smart_class_clean_storage', JSON.stringify(students));
+      localStorage.setItem('smart_class_clean_att', JSON.stringify(attendanceHistory));
+      populateFilterOptions();
+      renderAll();
+    }
+
+    function notify(text) {
+      const t = document.getElementById('toast');
+      t.innerText = text;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    function showTab(id) {
+      ['dashboard', 'students', 'attendance', 'grades', 'rewards'].forEach(t => {
+        document.getElementById(`tab-${t}`).style.display = (t === id) ? 'block' : 'none';
+        document.getElementById(`btn-${t}`).classList.toggle('active', t === id);
+      });
+    }
+
+    function onDateChange() {
+      selectedDate = document.getElementById('attendance-date').value || getTodayString();
+      updateDayDisplay();
+      renderAll();
+    }
+
+    function updateDayDisplay() {
+      const d = new Date(selectedDate);
+      const dayName = ARABIC_DAYS[d.getDay()] || '';
+      document.getElementById('day-name-display').innerText = `${dayName} (${selectedDate})`;
+      document.getElementById('att-current-day-label').innerText = `${dayName} - ${selectedDate}`;
+    }
+
+    function getStudentAttendance(studentId, dateStr) {
+      if (!attendanceHistory[dateStr]) attendanceHistory[dateStr] = {};
+      return attendanceHistory[dateStr][studentId] || 'PRESENT';
+    }
+
+    function setStudentAttendance(studentId, dateStr, status) {
+      if (!attendanceHistory[dateStr]) attendanceHistory[dateStr] = {};
+      attendanceHistory[dateStr][studentId] = status;
+    }
+
+    function calculateGradeDetails(t1, t2, fin) {
+      const total = (t1 || 0) + (t2 || 0) + (fin || 0);
+      let text = 'غير مجتاز';
+      let colorClass = 'background: #fee2e2; color: #991b1b;';
+
+      if (total >= 90) {
+        text = 'ممتاز 🌟';
+        colorClass = 'background: #d1fae5; color: #065f46;';
+      } else if (total >= 80) {
+        text = 'جيد جداً';
+        colorClass = 'background: #e0f2fe; color: #075985;';
+      } else if (total >= 70) {
+        text = 'جيد';
+        colorClass = 'background: #fef3c7; color: #92400e;';
+      } else if (total >= 60) {
+        text = 'مقبول';
+        colorClass = 'background: #fed7aa; color: #9a3412;';
+      }
+      return { total, text, colorClass };
+    }
+
+    function populateFilterOptions() {
+      const stageSelect = document.getElementById('filter-stage');
+      const currentStage = stageSelect.value;
+      const stages = [...new Set(students.map(s => s.stage).filter(Boolean))];
+      stageSelect.innerHTML = '<option value="ALL">جميع المراحل</option>';
+      stages.forEach(st => {
+        stageSelect.innerHTML += `<option value="${st}" ${st === currentStage ? 'selected' : ''}>${st}</option>`;
+      });
+      populateGradeOptions();
+    }
+
+    function populateGradeOptions() {
+      const stageVal = document.getElementById('filter-stage').value;
+      const gradeSelect = document.getElementById('filter-grade');
+      const currentGrade = gradeSelect.value;
+
+      let filtered = students;
+      if (stageVal !== 'ALL') filtered = filtered.filter(s => s.stage === stageVal);
+
+      const grades = [...new Set(filtered.map(s => s.gradeLevel).filter(Boolean))];
+      gradeSelect.innerHTML = '<option value="ALL">جميع الصفوف</option>';
+      grades.forEach(g => {
+        gradeSelect.innerHTML += `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${g}</option>`;
+      });
+      populateSectionOptions();
+    }
+
+    function populateSectionOptions() {
+      const stageVal = document.getElementById('filter-stage').value;
+      const gradeVal = document.getElementById('filter-grade').value;
+      const sectionSelect = document.getElementById('filter-section');
+      const currentSection = sectionSelect.value;
+
+      let filtered = students;
+      if (stageVal !== 'ALL') filtered = filtered.filter(s => s.stage === stageVal);
+      if (gradeVal !== 'ALL') filtered = filtered.filter(s => s.gradeLevel === gradeVal);
+
+      const sections = [...new Set(filtered.map(s => s.section).filter(Boolean))];
+      sectionSelect.innerHTML = '<option value="ALL">جميع الشُعب</option>';
+      sections.forEach(sec => {
+        sectionSelect.innerHTML += `<option value="${sec}" ${sec === currentSection ? 'selected' : ''}>شعبة ${sec}</option>`;
+      });
+    }
+
+    function onStageFilterChange() { populateGradeOptions(); renderAll(); }
+    function onGradeFilterChange() { populateSectionOptions(); renderAll(); }
+    function applyFilters() { renderAll(); }
+    function resetFilters() {
+      document.getElementById('filter-stage').value = 'ALL';
+      populateGradeOptions();
+      renderAll();
+    }
+
+    function getFilteredStudents() {
+      const stage = document.getElementById('filter-stage').value;
+      const grade = document.getElementById('filter-grade').value;
+      const section = document.getElementById('filter-section').value;
+
+      return students.filter(s => {
+        const matchStage = (stage === 'ALL' || s.stage === stage);
+        const matchGrade = (grade === 'ALL' || s.gradeLevel === grade);
+        const matchSection = (section === 'ALL' || s.section === section);
+        return matchStage && matchGrade && matchSection;
+      });
+    }
+
+    function renderDashboard(list) {
+      const tbody = document.getElementById('dash-tbody');
+      const empty = document.getElementById('dash-empty');
+      tbody.innerHTML = '';
+
+      if (list.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        list.forEach(s => {
+          const res = calculateGradeDetails(s.term1, s.term2, s.finalExam);
+          const att = getStudentAttendance(s.id, selectedDate);
+          tbody.innerHTML += `
+            <tr>
+              <td style="font-weight: 800; font-size: 14px; color: #0f172a;">${s.name}</td>
+              <td>${s.stage}</td>
+              <td>${s.gradeLevel}</td>
+              <td>شعبة ${s.section}</td>
+              <td style="text-align: center;">
+                <span style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: ${att === 'PRESENT' ? '#d1fae5; color: #065f46;' : '#fee2e2; color: #991b1b;'}">
+                  ${att === 'PRESENT' ? 'حاضر' : (att === 'LATE' ? 'متأخر' : (att === 'PERMITTED' ? 'مستأذن' : 'غائب'))}
+                </span>
+              </td>
+              <td style="text-align: center; font-weight: 900; font-size: 14px;">${res.total} / 100</td>
+              <td style="text-align: center;">
+                <span style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; ${res.colorClass}">
+                  ${res.text}
+                </span>
+              </td>
+              <td style="text-align: center; font-weight: 800; color: ${s.points >= 0 ? '#059669' : '#e11d48'};">
+                ${s.points >= 0 ? '+' + s.points : s.points}
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      const total = list.length;
+      document.getElementById('kpi-total').innerText = total;
+      const present = list.filter(s => getStudentAttendance(s.id, selectedDate) === 'PRESENT').length;
+      document.getElementById('kpi-att').innerText = total ? `${Math.round((present / total) * 100)}%` : '0%';
+
+      const totalSum = list.reduce((a, b) => a + (b.term1 || 0) + (b.term2 || 0) + (b.finalExam || 0), 0);
+      document.getElementById('kpi-grades').innerText = total ? `${Math.round(totalSum / total)}%` : '0%';
+      const sumPts = list.reduce((a, b) => a + b.points, 0);
+      document.getElementById('kpi-points').innerText = sumPts;
+    }
+
+    function renderStudentsManagement(list) {
+      const tbody = document.getElementById('students-manage-tbody');
+      const empty = document.getElementById('students-empty');
+      tbody.innerHTML = '';
+
+      if (list.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        list.forEach(s => {
+          tbody.innerHTML += `
+            <tr>
+              <td style="font-weight: 800; font-size: 14px; color: #0f172a;">${s.name}</td>
+              <td>${s.stage}</td>
+              <td>${s.gradeLevel}</td>
+              <td>شعبة ${s.section}</td>
+              <td style="color: var(--text-muted); font-family: monospace;">${s.nationalId || '-'}</td>
+              <td style="text-align: left;">
+                <button class="btn btn-rose" style="padding: 4px 10px; font-size: 11px;" onclick="deleteStudent('${s.id}')">
+                  حذف 🗑️
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+    }
+
+    function renderAttendance(list) {
+      const cont = document.getElementById('att-container');
+      const empty = document.getElementById('att-empty');
+      cont.innerHTML = '';
+
+      if (list.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        list.forEach(s => {
+          const status = getStudentAttendance(s.id, selectedDate);
+          let label = 'حاضر';
+          if (status === 'ABSENT_UNEXCUSED') label = 'غائب';
+          else if (status === 'LATE') label = 'متأخر';
+          else if (status === 'PERMITTED') label = 'مستأذن';
+
+          cont.innerHTML += `
+            <div class="att-card att-${status}" onclick="cycleAttendance('${s.id}')">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: rgba(0,0,0,0.06);">${label}</span>
+                <span style="font-size: 11px; color: var(--text-muted);">${s.gradeLevel} (${s.section})</span>
+              </div>
+              <div class="student-title-lg">${s.name}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">انقر للتبديل</div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function cycleAttendance(id) {
+      const current = getStudentAttendance(id, selectedDate);
+      let nextStatus = 'PRESENT';
+      if (current === 'PRESENT') nextStatus = 'ABSENT_UNEXCUSED';
+      else if (current === 'ABSENT_UNEXCUSED') nextStatus = 'LATE';
+      else if (current === 'LATE') nextStatus = 'PERMITTED';
+      else nextStatus = 'PRESENT';
+
+      setStudentAttendance(id, selectedDate, nextStatus);
+      saveAndSync();
+    }
+
+    function setAllPresentForDate() {
+      const list = getFilteredStudents();
+      list.forEach(s => setStudentAttendance(s.id, selectedDate, 'PRESENT'));
+      saveAndSync();
+      notify(`تم ضبط حضور جميع الطلاب ليوم (${selectedDate})`);
+    }
+
+    function renderGrades(list) {
+      const tbody = document.getElementById('grades-tbody');
+      const empty = document.getElementById('grades-empty');
+      tbody.innerHTML = '';
+
+      if (list.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        list.forEach(s => {
+          const res = calculateGradeDetails(s.term1, s.term2, s.finalExam);
+          tbody.innerHTML += `
+            <tr>
+              <td style="font-weight: 800; font-size: 14px; color: #0f172a;">${s.name}</td>
+              <td>${s.gradeLevel} (${s.section})</td>
+              <td style="text-align: center;">
+                <input type="number" min="0" max="20" step="0.5" value="${s.term1}"
+                  onchange="updateTermGrade('${s.id}', 'term1', this.value, 20)" class="grade-input" />
+              </td>
+              <td style="text-align: center;">
+                <input type="number" min="0" max="20" step="0.5" value="${s.term2}"
+                  onchange="updateTermGrade('${s.id}', 'term2', this.value, 20)" class="grade-input" />
+              </td>
+              <td style="text-align: center;">
+                <input type="number" min="0" max="60" step="0.5" value="${s.finalExam}"
+                  onchange="updateTermGrade('${s.id}', 'finalExam', this.value, 60)" class="grade-input" style="width: 75px;" />
+              </td>
+              <td style="text-align: center; font-weight: 900; font-size: 14px; color: var(--indigo);">${res.total}</td>
+              <td style="text-align: center;">
+                <span style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; ${res.colorClass}">
+                  ${res.text}
+                </span>
+              </td>
+            </tr>
+          `;
+        });
+      }
+    }
+
+    function updateTermGrade(id, termKey, val, maxVal) {
+      const s = students.find(x => x.id === id);
+      const num = parseFloat(val);
+      if (s && !isNaN(num)) {
+        s[termKey] = Math.min(maxVal, Math.max(0, num));
+        saveAndSync();
+      }
+    }
+
+    function renderRewards(list) {
+      const cont = document.getElementById('rewards-container');
+      const empty = document.getElementById('rewards-empty');
+      cont.innerHTML = '';
+
+      if (list.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        list.forEach(s => {
+          const isPos = s.points >= 0;
+          cont.innerHTML += `
+            <div class="reward-card">
+              <div>
+                <div class="student-title-lg" style="font-size: 16px;">${s.name}</div>
+                <span style="font-size: 11px; color: var(--text-muted);">${s.gradeLevel} - شعبة ${s.section}</span>
+                
+                <div style="font-size: 24px; font-weight: 900; margin: 10px 0;" class="${isPos ? 'score-badge-positive' : 'score-badge-negative'}">
+                  ${isPos ? '+' + s.points : s.points} نقطة
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn btn-primary" style="flex: 1; justify-content: center; font-size: 11px;" onclick="applyBehaviorAction('${s.id}', 5, 'مشاركة وتفاعل إيجابي', true)">
+                    +5 مشاركة ⭐
+                  </button>
+                  <button class="btn btn-indigo" style="flex: 1; justify-content: center; font-size: 11px;" onclick="applyBehaviorAction('${s.id}', 10, 'إنجاز وتفوق صفي', true)">
+                    +10 تميز 🏆
+                  </button>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn btn-rose" style="flex: 1; justify-content: center; font-size: 11px;" onclick="applyBehaviorAction('${s.id}', -5, 'سلوك غير منضبط أو تحدث جانبي', false)">
+                    -5 انضباط ⚠️
+                  </button>
+                  <button class="btn btn-rose" style="flex: 1; justify-content: center; font-size: 11px; background: #991b1b;" onclick="applyBehaviorAction('${s.id}', -10, 'مخالفة صفية صريحة', false)">
+                    -10 مخالفة ⛔
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function applyBehaviorAction(id, pts, reason, isPositive) {
+      const s = students.find(x => x.id === id);
+      if (!s) return;
+
+      s.points += pts;
+      saveAndSync();
+
+      const modal = document.getElementById('celebModal');
+      const icon = document.getElementById('action-icon');
+      const box = document.getElementById('action-box');
+      const pointsDisplay = document.getElementById('celeb-points');
+
+      document.getElementById('celeb-name').innerText = s.name;
+      document.getElementById('celeb-reason').innerText = reason;
+
+      if (isPositive) {
+        icon.innerText = '🌟';
+        box.style.background = '#f0fdf4';
+        box.style.border = '1px solid #bbf7d0';
+        pointsDisplay.style.color = '#059669';
+        pointsDisplay.innerText = `+${pts} نقاط تعزيز`;
+
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          [523.25, 659.25, 783.99].forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.setValueAtTime(f, ctx.currentTime + i * 0.08);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.25);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.08); osc.stop(ctx.currentTime + i * 0.08 + 0.25);
+          });
+        } catch(e) {}
+
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+      } else {
+        icon.innerText = '⚠️';
+        box.style.background = '#fef2f2';
+        box.style.border = '1px solid #fecaca';
+        pointsDisplay.style.color = '#e11d48';
+        pointsDisplay.innerText = `${pts} نقطة حسم سلوك`;
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeCeleb() {
+      document.getElementById('celebModal').classList.remove('active');
+    }
+
+    function openAddStudentModal() {
+      updateAddFormGrades();
+      document.getElementById('addStudentModal').classList.add('active');
+    }
+
+    function closeAddStudentModal() {
+      document.getElementById('addStudentModal').classList.remove('active');
+    }
+
+    function updateAddFormGrades() {
+      const stage = document.getElementById('m-add-stage').value;
+      const gradeSelect = document.getElementById('m-add-grade');
+      gradeSelect.innerHTML = '';
+      (EDUCATION_STAGES[stage] || []).forEach(g => {
+        gradeSelect.innerHTML += `<option value="${g}">${g}</option>`;
+      });
+    }
+
+    function submitAddStudent() {
+      const name = document.getElementById('m-add-name').value.trim();
+      const nationalId = document.getElementById('m-add-id').value.trim();
+      const stage = document.getElementById('m-add-stage').value;
+      const gradeLevel = document.getElementById('m-add-grade').value;
+      const section = document.getElementById('m-add-section').value.trim() || '1';
+
+      if (!name) {
+        notify('يجب كتابة اسم الطالب الصريح');
+        return;
+      }
+
+      students.push({
+        id: String(Date.now()),
+        nationalId: nationalId || '',
+        name: name,
+        stage: stage,
+        gradeLevel: gradeLevel,
+        section: section,
+        term1: 0,
+        term2: 0,
+        finalExam: 0,
+        points: 0
+      });
+
+      saveAndSync();
+      closeAddStudentModal();
+      document.getElementById('m-add-name').value = '';
+      document.getElementById('m-add-id').value = '';
+      notify(`✓ تم تسجيل الطالب (${name}) بنجاح`);
+    }
+
+    function deleteStudent(id) {
+      const s = students.find(x => x.id === id);
+      const studentName = s ? s.name : 'هذا الطالب';
+      if (confirm(`هل أنت متأكد من حذف الطالب (${studentName}) من السجلات؟`)) {
+        students = students.filter(s => s.id !== id);
+        saveAndSync();
+        notify('تم حذف الطالب من السجل');
+      }
+    }
+
+    function clearAllStudents() {
+      if (confirm('تحذير: سيتم مسح كافة سجلات الطلاب، هل تريد الاستمرار؟')) {
+        students = [];
+        attendanceHistory = {};
+        saveAndSync();
+        notify('تم تفريغ كافة السجلات');
+      }
+    }
+
+    function importExcel(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet);
+
+          if (rows.length === 0) {
+            notify('الملف فارغ!');
+            return;
+          }
+
+          const newStudents = [];
+          for (let i = 0; i < rows.length; i++) {
+            const r = rows[i];
+            const realName = r['الاسم'] || r['اسم الطالب'] || r['الاسم الرباعي'];
+            if (!realName) continue;
+
+            newStudents.push({
+              id: String(Date.now() + i),
+              name: String(realName).trim(),
+              nationalId: String(r['الهوية'] || r['رقم الهوية'] || r['السجل المدني'] || ''),
+              stage: String(r['المرحلة'] || 'المتوسطة').trim(),
+              gradeLevel: String(r['الصف'] || 'ثاني متوسط').trim(),
+              section: String(r['الفصل'] || r['الشعبة'] || '1').trim(),
+              term1: 0,
+              term2: 0,
+              finalExam: 0,
+              points: 0
+            });
+          }
+
+          if (newStudents.length === 0) {
+            notify('تأكد من وجود عمود باسم (الاسم) أو (اسم الطالب)');
+            return;
+          }
+
+          students = newStudents;
+          saveAndSync();
+          notify(`✓ تم استيراد ${students.length} طالباً بنجاح`);
+        } catch (err) {
+          notify('خطأ في قراءة ملف الإكسيل');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function downloadTemplate() {
+      const sample = [
+        { "الاسم": "عبدالله محمد السعد", "الهوية": "1098765431", "المرحلة": "المتوسطة", "الصف": "ثاني متوسط", "الشعبة": "1" },
+        { "الاسم": "فيصل عبدالرحمن القحطاني", "الهوية": "1098765432", "المرحلة": "المتوسطة", "الصف": "ثاني متوسط", "الشعبة": "1" },
+        { "الاسم": "سعود خالد العتيبي", "الهوية": "1098765433", "المرحلة": "المتوسطة", "الصف": "ثاني متوسط", "الشعبة": "2" }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sample);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "الطلاب");
+      XLSX.writeFile(wb, "نموذج_استيراد_بيانات_الطلاب.xlsx");
+      notify('تم تنزيل نموذج الإكسيل');
+    }
+
+    function exportGrades() {
+      const list = getFilteredStudents();
+      if (list.length === 0) { notify('لا توجد بيانات طلاب لتصديرها'); return; }
+      const exportData = list.map(s => {
+        const res = calculateGradeDetails(s.term1, s.term2, s.finalExam);
+        return {
+          "اسم الطالب": s.name,
+          "رقم الهوية": s.nationalId || '-',
+          "المرحلة": s.stage,
+          "الصف": s.gradeLevel,
+          "الشعبة": s.section,
+          "الفترة الأولى (20)": s.term1,
+          "الفترة الثانية (20)": s.term2,
+          "النهائي (60)": s.finalExam,
+          "المجموع الكلي (100)": res.total,
+          "التقدير العام": res.text,
+          "رصيد السلوك": s.points
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "الدرجات");
+      XLSX.writeFile(wb, "كشف_درجات_الفصل_الشامل.xlsx");
+      notify('تم تصدير كشف الدرجات بنجاح');
+    }
+
+    function renderAll() {
+      const list = getFilteredStudents();
+      renderDashboard(list);
+      renderStudentsManagement(list);
+      renderAttendance(list);
+      renderGrades(list);
+      renderRewards(list);
+    }
+
+    window.onload = function() {
+      document.getElementById('attendance-date').value = selectedDate;
+      updateDayDisplay();
+      populateFilterOptions();
+      renderAll();
+    };
+  </script>
+</body>
+</html>
